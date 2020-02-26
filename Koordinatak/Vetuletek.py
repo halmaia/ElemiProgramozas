@@ -23,7 +23,7 @@ def kontinensekRajzolasa(paths: list, proj):
     plt.show()
 
 
-def centralisSikvetulet(lon, lat):
+def centralisSikvetulet(lon: list, lat: list):
     R = 6371.0 * 1000.0
     n = len(lon)
     x, y = [0.0] * n, [0.0] * n
@@ -35,7 +35,7 @@ def centralisSikvetulet(lon, lat):
     return x, y
 
 
-def ortografikusSikvetulet(lon, lat):
+def ortografikusSikvetulet(lon: list, lat: list):
     R = 6371.0 * 1000.0
     n = len(lon)
     x, y = [0.0] * n, [0.0] * n
@@ -47,7 +47,7 @@ def ortografikusSikvetulet(lon, lat):
     return x, y
 
 
-def sztereografikusSikvetulet(lon, lat):
+def sztereografikusSikvetulet(lon: list, lat: list):
     R = 6371.0 * 1000.0
     n = len(lon)
     x, y = [0.0] * n, [0.0] * n
@@ -59,7 +59,7 @@ def sztereografikusSikvetulet(lon, lat):
     return x, y
 
 
-def postelSikvetulet(lon, lat):
+def postelSikvetulet(lon: list, lat: list):
     R = 6371.0 * 1000.0
     n = len(lon)
     x, y = [0.0] * n, [0.0] * n
@@ -71,7 +71,7 @@ def postelSikvetulet(lon, lat):
     return x, y
 
 
-def lambertSikvetulet(lon, lat):
+def lambertSikvetulet(lon: list, lat: list):
     R = 6371.0 * 1000.0
     n = len(lon)
     x, y = [0.0] * n, [0.0] * n
