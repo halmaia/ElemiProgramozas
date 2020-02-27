@@ -113,7 +113,7 @@ def getArea(x: list, y: list):
     a = 0.0
     for i in range(n - 1):
         a += (y[i] + y[i + 1]) * 0.5 * (x[i + 1] - x[i])
-    return math.abs(a)
+    return abs(a)
 
 paths = (r"F:\Coords\Asia.csv",
          r"F:\Coords\Europe.csv",
