@@ -20,9 +20,13 @@ internal class Program
         switch (*(int*)(ptr += 6))
         {
             case 6:
-                HeaderInfo headerInfo = *(HeaderInfo*)(ptr += 4);
-                ReadOnlySpan<float> minMaxRanges = new(ptr+=sizeof(HeaderInfo),3);
-                ReadOnlySpan<byte> array = new(ptr+3*sizeof(float), (headerInfo.blobSize-6-4-sizeof(HeaderInfo)-4-4-4));
+                HeaderInfo* headerInfo = (HeaderInfo*)(ptr += 4);
+                int maskBlobSize = *(int*)(ptr += sizeof(HeaderInfo));
+                ReadOnlySpan<float> ranges = new(ptr += 4, 2);
+                ptr += (2 * sizeof(float));
+                byte mode = *(ptr += (2 * sizeof(float)));
+                byte sweep = *(ptr += 1);
+                ReadOnlySpan<byte> array = new(ptr, 72);
                 break;
             default:
                 break;
