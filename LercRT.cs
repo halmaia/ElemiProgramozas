@@ -1,5 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 
 namespace LercCS
 {
@@ -41,37 +43,83 @@ namespace LercCS
         private static unsafe void Main()
         {
             var rnd = Random.Shared;
-            float[] ras = new float[64];
-            for (int i = 0; i < 64;)
+            float[] ras = new float[256];
+            for (int i = 0; i < 256;)
             {
-                ras[i++] = float.FusedMultiplyAdd(40f, rnd.NextSingle(), 160f);
+                // 40; 160
+                ras[i++] = float.FusedMultiplyAdd(10f, rnd.NextSingle(), 160f);
             }
 
-            var comp_ras = Encode(MemoryMarshal.AsBytes<float>(ras), 6, 1, 8, 8, 1, 0, null, .1d);
+            ReadOnlySpan<byte> comp_ras = Encode(MemoryMarshal.AsBytes<float>(ras), 6, 1, 16, 16, 1, 0, null, .1d);
 
-            fixed (byte* rasPointer = comp_ras)
+            if (!comp_ras.StartsWith(@"Lerc2 "u8))
+                throw new InvalidDataException("Invalid file!");
+
+            fixed (byte* rasPointer = comp_ras[6..])
             {
-                if (new string((sbyte*)rasPointer, 0, 6) != @"Lerc2 ")
-                    throw new InvalidDataException("Invalid file!");
-                HeaderInfo* info = (HeaderInfo*)(rasPointer + 6);
+                HeaderInfo* info = (HeaderInfo*)(rasPointer);
                 FloatRange* range = (FloatRange*)(((byte*)info) + sizeof(HeaderInfo));
                 byte* ptr = ((byte*)range) + sizeof(FloatRange);
                 bool isRaw = *ptr is 1;
-                BlockAndArrayHeader* header = (BlockAndArrayHeader*)(ptr+=1);
+                BlockAndArrayHeader* header = (BlockAndArrayHeader*)(ptr += 1);
 
 
                 var decoded = GC.AllocateUninitializedArray<float>(header->numPix);
                 var offset = header->offset;
                 float dmaxZ = (float)(2d * info->MaxZError);
-                ptr+= sizeof(BlockAndArrayHeader);
+                ptr += sizeof(BlockAndArrayHeader);
+
+                var mux = Decompress8bit8x8BlocksToFloat(new(ptr, 64), (float)info->MaxZError, header->offset);
+
+
                 for (int i = 0, max = header->numPix;
                     i < max; i++)
                 {
-                   decoded[i]= float.FusedMultiplyAdd(dmaxZ, ptr[i], offset);
+                    decoded[i] = float.FusedMultiplyAdd(dmaxZ, ptr[i], offset);
                 }
 
 
+                ptr += 64;
+                header = (BlockAndArrayHeader*)(ptr);
+
+
+
+                static unsafe ReadOnlySpan<float> Decompress8bit8x8BlocksToFloat(
+                       ReadOnlySpan<byte> bytesToDecompress,
+                       in float maxZError, float offset)
+                {
+                    fixed (byte* ptr = bytesToDecompress)
+                    {
+                        ReadOnlySpan<float> result = new float[64];
+                        fixed (float* dst = result)
+                        {
+                            var z = Vector256.Create(2.0f * maxZError);
+                            var min = Avx2.BroadcastScalarToVector256(&offset);
+
+                            (var ushort1, var ushort2) = Vector256.Widen(*(Vector256<byte>*)ptr);
+                            (var uint1, var uint2) = Vector256.Widen(ushort1);
+                            Fma.MultiplyAdd(z, Vector256.ConvertToSingle(uint1), min).Store(dst);
+                            Fma.MultiplyAdd(z, Vector256.ConvertToSingle(uint2), min).Store(dst + 8);
+
+                            (var uint3, var uint4) = Vector256.Widen(ushort2);
+                            Fma.MultiplyAdd(z, Vector256.ConvertToSingle(uint3), min).Store(dst + 16);
+                            Fma.MultiplyAdd(z, Vector256.ConvertToSingle(uint4), min).Store(dst + 24);
+
+                            (var ushort3, var ushort4) = Vector256.Widen(*(Vector256<byte>*)(ptr + 32));
+                            (var uint5, var uint6) = Vector256.Widen(ushort3);
+                            Fma.MultiplyAdd(z, Vector256.ConvertToSingle(uint5), min).Store(dst + 32);
+                            Fma.MultiplyAdd(z, Vector256.ConvertToSingle(uint6), min).Store(dst + 40);
+
+                            (var uint7, var uint8) = Vector256.Widen(ushort4);
+                            Fma.MultiplyAdd(z, Vector256.ConvertToSingle(uint7), min).Store(dst + 48);
+                            Fma.MultiplyAdd(z, Vector256.ConvertToSingle(uint8), min).Store(dst + 56);
+                            return result;
+                        }
+
+                    }
+                }
             }
+
 
 
         }
@@ -111,23 +159,23 @@ namespace LercCS
             internal readonly float zMax;
         }
 
-        private enum EncodingType:byte
+        private enum EncodingType : byte
         {
             Raw, Quantized, AllZero, AllConstant
         }
 
-        [StructLayout(LayoutKind.Sequential, Pack = 1, Size =7)]
+        [StructLayout(LayoutKind.Sequential, Pack = 1, Size = 7)]
         private readonly ref struct BlockAndArrayHeader
 
         {
             internal readonly EncodingType type;
             internal readonly float offset;
             internal readonly byte BitsAndType;
-          
+
             internal readonly byte numPix;
 
             internal readonly byte numBits => (byte)(0b0001_1111 & BitsAndType);
-            internal readonly byte numFxLen => (byte)( BitsAndType>>6);
+            internal readonly byte numFxLen => (byte)(BitsAndType >> 6);
 
         }
     }
