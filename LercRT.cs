@@ -1,3 +1,4 @@
+using System.ComponentModel.Design;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
@@ -64,33 +65,77 @@ namespace LercCS
                 BlockAndArrayHeader* header = (BlockAndArrayHeader*)(ptr += 1);
 
 
-                var decoded = GC.AllocateUninitializedArray<float>(header->numPix);
-                var offset = header->offset;
-                float dmaxZ = (float)(2d * info->MaxZError);
+                //var decoded = GC.AllocateUninitializedArray<float>(header->numPix);
+                //var offset = header->offset;
+                //float dmaxZ = (float)(2d * info->MaxZError);
                 ptr += sizeof(BlockAndArrayHeader);
 
-                var mux = Decompress8bit8x8BlocksToFloat(new(ptr, 64), (float)info->MaxZError, header->offset);
+                var numBytes = (int)((header->numBits * header->numPix) / 8f + .5);
 
 
-                for (int i = 0, max = header->numPix;
-                    i < max; i++)
-                {
-                    decoded[i] = float.FusedMultiplyAdd(dmaxZ, ptr[i], offset);
-                }
+                var mux = Decompress8bit8x8BlocksToFloat(new(ptr, numBytes), (float)info->MaxZError, header->offset,
+                    header->numBits, header->numPix);
+
+                var fake = 1;
+
+                //for (int i = 0, max = header->numPix;
+                //    i < max; i++)
+                //{
+                //    decoded[i] = float.FusedMultiplyAdd(dmaxZ, ptr[i], offset);
+                //}
 
 
-                ptr += 64;
-                header = (BlockAndArrayHeader*)(ptr);
+                //ptr += 64;
+                //header = (BlockAndArrayHeader*)(ptr);
 
 
 
-                static unsafe ReadOnlySpan<float> Decompress8bit8x8BlocksToFloat(
+                static unsafe ReadOnlySpan<float> Decompress8bit8x8BlocksToFloat
+                    (
                        ReadOnlySpan<byte> bytesToDecompress,
-                       in float maxZError, float offset)
+                       float maxZError,
+                       float offset,
+                       byte numBits, byte numPix)
                 {
-                    fixed (byte* ptr = bytesToDecompress)
+
+                    ReadOnlySpan<byte> decomp;
+                    if (numBits is not 8)
                     {
-                        ReadOnlySpan<float> result = new float[64];
+                        var imedPixels = GC.AllocateUninitializedArray<byte>(numPix);
+                        var i = 0;
+                        byte pos = 0;
+                        var outer = 0;
+                        
+                        fixed (byte* ptr = bytesToDecompress)
+                        {
+                            var pointer = ptr;
+                            ulong longval = *(ulong*)pointer;
+                            while (outer < bytesToDecompress.Length)
+                            {
+                               
+                                while (pos < (64 - numBits))
+                                {
+                                    imedPixels[i++] = (byte)Bmi1.X64.BitFieldExtract(longval, pos, numBits);
+                                    pos += numBits;
+                                }
+                                if (pos != 64)
+                                {
+                                    longval = *(ulong*)(pointer += 7);
+                                    outer += 7;
+                                }
+                                else {longval = *(ulong*)(pointer+= 8); outer += 8; }
+                                pos =(byte) (64-pos);
+                                
+                            }
+                        }
+                        decomp = new ReadOnlySpan<byte>(imedPixels);
+                    }
+                    else decomp = bytesToDecompress;
+
+                    fixed (byte* ptr = decomp)
+                    {
+                        ReadOnlySpan<float> result = GC.AllocateUninitializedArray<float>(numPix);
+
                         fixed (float* dst = result)
                         {
                             var z = Vector256.Create(2.0f * maxZError);
@@ -105,6 +150,7 @@ namespace LercCS
                             Fma.MultiplyAdd(z, Vector256.ConvertToSingle(uint3), min).Store(dst + 16);
                             Fma.MultiplyAdd(z, Vector256.ConvertToSingle(uint4), min).Store(dst + 24);
 
+                            // 2nd half:
                             (var ushort3, var ushort4) = Vector256.Widen(*(Vector256<byte>*)(ptr + 32));
                             (var uint5, var uint6) = Vector256.Widen(ushort3);
                             Fma.MultiplyAdd(z, Vector256.ConvertToSingle(uint5), min).Store(dst + 32);
