@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<!-- Written by Ákos Halmai, University of Pécs -->
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optical distortion visualizer</title>
+    <style>
+        body {
+            text-align: center;
+            margin: 20px;
+			font-family: sans-serif;
+        }
+        canvas {
+            border: 1px solid black;
+        }
+        .controls {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Optical distortion visualizer</h2>
+    <canvas id="canvas" width="549.6" height="367.2"></canvas>
+    
+    <div class="controls">
+	<label for="K1">K₁:</label>
+	<input type="range" id="K1" min="-1.0" max="1.0" value="-0.041531240803876872" step="0.001">
+	<input type="text" id="K1_text" value="-0.041531240803876872" pattern="^-?\d+(\.\d+)?$" readonly="true">
+
+	<label for="K2">K₂:</label>
+	<input type="range" id="K2" min="-0.5" max="0.5" value="0.012941302706440718" step="0.001">
+	<input type="text" id="K2_text" value="0.012941302706440718" pattern="^-?\d+(\.\d+)?$" readonly="true"><br>
+
+	<label for="K3">K₃:</label>
+	<input type="range" id="K3" min="-0.01" max="0.01" value="-0.0034808416825439122" step="0.0001">
+	<input type="text" id="K3_text" value="-0.0034808416825439122" pattern="^-?\d+(\.\d+)?$" readonly="true">
+
+	<label for="K4">K₄:</label>
+	<input type="range" id="K4" min="-0.001" max="0.001" value="-8.8755910742031053e-05" step="0.00001">
+	<input type="text" id="K4_text" value="-8.8755910742031053e-05" pattern="^-?\d+(\.\d+)?$" readonly="true" title="K₄"><br>
+
+	<label for="spacing">Line spacing:</label>
+	<input type="range" id="spacing" min="0.01" max="0.5" value="0.1" step="0.01">
+	<input type="text" id="spacing_text" value="0.1" pattern="^-?\d+(\.\d+)?$" readonly="true" title="line spacing">
+    </div>
+
+<script>
+    "use strict";
+
+    const width = 5496.0,
+          height = 3672.0,
+          f = 2779.2957348125424,
+          cx = 25.295157579435635,
+          cy = -43.907218870556122,
+          b1 = 0.20890931770811011,
+          b2 = 1.3186242018479155,
+          p1 = -0.00027044595856980146,
+          p2 = 0.00021213432269553002;
+
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    const sliders = ["K1", "K2", "K3", "K4", "spacing"];
+    sliders.forEach(id => document.getElementById(id).addEventListener("input", drawLine));
+	
+
+    function computeUV(X, Y, k1, k2, k3, k4, Z = 1.0) {
+		const x = X / Z, y = Y / Z;
+		const xy = x * y;
+
+		const r2 = Math.hypot(x,y);
+		const r4 = r2 * r2;
+		const r6 = r4 * r2;
+		const r8 = r4 * r4;
+
+		const K = 1.0 + r2 * (k1 + r2 * (k2 + r2 * (k3 + r2 * k4)));
+
+		const radialX = x * K;
+		const radialY = y * K;
+		const tangentialX = p1 * (r2 + 2.0 * x * x) + 2.0 * p2 * xy;
+		const tangentialY = p2 * (r2 + 2.0 * y * y) + 2.0 * p1 * xy;
+
+		// Final distorted coordinates
+		const xDistorted = radialX + tangentialX;
+		const yDistorted = radialY + tangentialY;
+
+        return {
+            u: (width * 0.5) + cx + xDistorted * f + xDistorted * b1 + yDistorted * b2,
+            v:  yDistorted * f + cy + (height * 0.5)
+        };
+    }
+
+    function scaleUV(u, v, scale) {
+        return { u: scale * u, v: scale * v };
+    }
+
+    function drawLine() {
+        const k1 = parseFloat(document.getElementById("K1").value),
+              k2 = parseFloat(document.getElementById("K2").value),
+              k3 = parseFloat(document.getElementById("K3").value),
+              k4 = parseFloat(document.getElementById("K4").value),
+              spacing = parseFloat(document.getElementById("spacing").value);
+			  
+			  document.getElementById("K1_text").value = k1;
+			  document.getElementById("K2_text").value = k2;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const scale = canvas.width / width;
+
+            ctx.beginPath();
+        for (let y = -1.1; y <= 1.1; y += spacing) {
+            let { u, v } = computeUV(-1.1, y, k1, k2, k3, k4);
+            ({ u, v } = scaleUV(u, v, scale));
+            ctx.moveTo(u, v);
+
+            for (let x = -1.1; x <= 1.1; x += spacing) {
+                ({ u, v } = computeUV(x, y, k1, k2, k3, k4));
+                ({ u, v } = scaleUV(u, v, scale));
+                ctx.lineTo(u, v);
+            }
+        }
+		            ctx.strokeStyle = "red";
+            ctx.lineWidth = 2.0;
+            ctx.stroke();
+        
+		ctx.beginPath();
+		for (let x = -1.1; x <= 1.1; x += spacing) {
+            
+            let { u, v } = computeUV(x, -1.1, k1, k2, k3, k4);
+            ({ u, v } = scaleUV(u, v, scale));
+            ctx.moveTo(u, v);
+
+            for (let y = -1.1; y <= 1.1; y += spacing) {
+                ({ u, v } = computeUV(x, y, k1, k2, k3, k4));
+                ({ u, v } = scaleUV(u, v, scale));
+                ctx.lineTo(u, v);
+            }
+        }
+		            ctx.strokeStyle = "brown";
+            ctx.lineWidth = 2.0;
+            ctx.stroke();
+    }
+
+    drawLine();
+</script>
+</body>
+</html>
