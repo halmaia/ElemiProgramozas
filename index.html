@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- Written by Ákos Halmai, University of Pécs -->
 <html lang="en">
 <head>
     <meta charset="utf-8">
@@ -17,6 +16,18 @@
         .controls {
             margin-top: 10px;
         }
+		input[type="text"] {
+			pattern: "^-?\\d+(\\.\\d+)?$";
+			readonly: true;}
+	
+	    .blue-outline {
+		width: fit-content;
+		    margin: auto; /* Centers the fieldset */
+    display: block; /* Ensures auto margins work */
+        border: 1px solid blue;
+        padding: 10px;
+        border-radius: 5px;
+    }
     </style>
 </head>
 <body>
@@ -24,49 +35,52 @@
     <canvas id="canvas" width="549.6" height="367.2"></canvas>
     
     <div class="controls">
-	<label for="Cx">Cx:</label>
+	<fieldset class="blue-outline">
+	<legend>Principal point [pixels]</legend>
+	<label for="Cx">Cₓ:</label>
 	<input type="range" id="Cx" min="-150.0" max="150.0" value="25.295157579435635" step="0.01">
-	<input type="text" id="Cx_text" value="-0.041531240803876872" pattern="^-?\d+(\.\d+)?$" readonly="true" title="Cx">
+	<input type="text" id="Cx_text" value="-0.041531240803876872" title="Cₓ">
 	
-	<label for="Cy">Cy:</label>
+	<label for="Cy">C<sub>y</sub>:</label>
 	<input type="range" id="Cy" min="-150.0" max="150.0" value="-43.907218870556122" step="0.01">
-	<input type="text" id="Cy_text" value="-0.041531240803876872" pattern="^-?\d+(\.\d+)?$" readonly="true" title="Cy"><br>
+	<input type="text" id="Cy_text" value="-0.041531240803876872" title="Cy"><br>
+	</fieldset>
 	
-		<label for="B1">B₁:</label>
+	<label for="B1">B₁:</label>
 	<input type="range" id="B1" min="-80" max="80" value="0.20890931770811011" step="0.01">
-	<input type="text" id="B1_text" value="-0.041531240803876872" pattern="^-?\d+(\.\d+)?$" readonly="true">
+	<input type="text" id="B1_text" value="-0.041531240803876872">
 
 	<label for="B2">B₂:</label>
 	<input type="range" id="B2" min="-80" max="80" value="1.3186242018479155" step="0.01">
-	<input type="text" id="B2_text" value="0.012941302706440718" pattern="^-?\d+(\.\d+)?$" readonly="true"><br>
+	<input type="text" id="B2_text" value="0.012941302706440718"><br>
 	
 		<label for="P1">P₁:</label>
 	<input type="range" id="P1" min="-0.1" max="0.1" value="-0.00027044595856980146" step="0.0001">
-	<input type="text" id="P1_text" value="-0.041531240803876872" pattern="^-?\d+(\.\d+)?$" readonly="true">
+	<input type="text" id="P1_text" value="-0.041531240803876872">
 
 	<label for="P2">P₂:</label>
 	<input type="range" id="P2" min="-0.1" max="0.1" value="0.00021213432269553002" step="0.0001">
-	<input type="text" id="P2_text" value="0.012941302706440718" pattern="^-?\d+(\.\d+)?$" readonly="true"><br>
+	<input type="text" id="P2_text" value="0.012941302706440718"><br>
 	
 	<label for="K1">K₁:</label>
 	<input type="range" id="K1" min="-1.0" max="1.0" value="-0.041531240803876872" step="0.001">
-	<input type="text" id="K1_text" value="-0.041531240803876872" pattern="^-?\d+(\.\d+)?$" readonly="true">
+	<input type="text" id="K1_text" value="-0.041531240803876872">
 
 	<label for="K2">K₂:</label>
 	<input type="range" id="K2" min="-0.5" max="0.5" value="0.012941302706440718" step="0.001">
-	<input type="text" id="K2_text" value="0.012941302706440718" pattern="^-?\d+(\.\d+)?$" readonly="true"><br>
+	<input type="text" id="K2_text" value="0.012941302706440718"><br>
 
 	<label for="K3">K₃:</label>
 	<input type="range" id="K3" min="-0.01" max="0.01" value="-0.0034808416825439122" step="0.0001">
-	<input type="text" id="K3_text" value="-0.0034808416825439122" pattern="^-?\d+(\.\d+)?$" readonly="true">
+	<input type="text" id="K3_text" value="-0.0034808416825439122">
 
 	<label for="K4">K₄:</label>
 	<input type="range" id="K4" min="-0.001" max="0.001" value="-8.8755910742031053e-05" step="0.00001">
-	<input type="text" id="K4_text" value="-8.8755910742031053e-05" pattern="^-?\d+(\.\d+)?$" readonly="true" title="K₄"><br>
+	<input type="text" id="K4_text" value="-8.8755910742031053e-05" title="K₄"><br>
 
 	<label for="spacing">Line spacing:</label>
 	<input type="range" id="spacing" min="0.01" max="0.5" value="0.1" step="0.01">
-	<input type="text" id="spacing_text" value="0.1" pattern="^-?\d+(\.\d+)?$" readonly="true" title="line spacing"><br>
+	<input type="text" id="spacing_text" value="0.1" title="line spacing"><br>
 	
 	<input type="button" value="↻" id="reset" title="reset">
     </div>
@@ -100,8 +114,36 @@ K1Slider = document.getElementById("K1"),
     K1Text = document.getElementById("K1_text"),
     K2Text = document.getElementById("K2_text");
 
-const sliders = [K1Slider, K2Slider, K3Slider, K4Slider, SpacingSlider, CxSlider, CySlider,P1Slider,P2Slider,B1Slider,B2Slider];
-sliders.forEach(ctr => ctr.addEventListener("input", drawLine));
+const sliders = [K1Slider, K2Slider, K3Slider, K4Slider, SpacingSlider, CxSlider, CySlider, P1Slider, P2Slider, B1Slider, B2Slider];
+
+sliders.forEach(slider => {
+    const updateUI = () => {
+        slider.title = slider.value;
+        const textBox = document.getElementById(`${slider.id}_text`);
+        if (textBox) {
+            textBox.value = slider.value;
+        }
+    };
+
+    slider.addEventListener("input", drawLine);
+    slider.addEventListener("input", updateUI);
+
+    // Initial update to ensure correct values on load
+    updateUI();
+});
+						   
+
+document.getElementById("reset").addEventListener("click", () => {
+        sliders.forEach(slider => {
+        slider.value = slider.getAttribute("value"); // Reset to default value
+        const textBox = document.getElementById(slider.id + "_text");
+        if (textBox) {
+            textBox.value = slider.value;
+        }
+		drawLine();
+    });
+});
+
 
 function computeUV(X, Y,
     width, height,
