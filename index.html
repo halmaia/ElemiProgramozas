@@ -8,250 +8,286 @@
         body {
             text-align: center;
             margin: 20px;
-			font-family: sans-serif;
+            font-family: sans-serif;
         }
+
         canvas {
             border: 1px solid black;
         }
+
         .controls {
             margin-top: 10px;
         }
-		input[type="text"] {
-			pattern: "^-?\\d+(\\.\\d+)?$";
-			readonly: true;}
-	
-	    .blue-outline {
-		width: fit-content;
-		    margin: auto; /* Centers the fieldset */
-    display: block; /* Ensures auto margins work */
-        border: 1px solid blue;
-        padding: 10px;
-        border-radius: 5px;
-    }
+
+        input[type="text"] {
+            pattern: "^-?\\d+(\\.\\d+)?$";
+            readonly: true;
+            text-align: right;
+        }
+
+        .blue-outline {
+            width: fit-content;
+            margin: auto;
+            display: block;
+            border: 1px solid blue;
+            padding: 7px;
+            border-radius: 5px;
+        }
+
+        legend {
+            font-size: 0.7em;
+        }
     </style>
 </head>
 <body>
     <h2>Optical distortion visualizer</h2>
-    <canvas id="canvas" width="549.6" height="367.2"></canvas>
-    
+    <h5 style="color: gray">by Ákos Halmai</h5>
+    <canvas id="canvas" width="547" height="367"></canvas>
+
     <div class="controls">
-	<fieldset class="blue-outline">
-	<legend>Principal point [pixels]</legend>
-	<label for="Cx">Cₓ:</label>
-	<input type="range" id="Cx" min="-150.0" max="150.0" value="25.295157579435635" step="0.01">
-	<input type="text" id="Cx_text" value="-0.041531240803876872" title="Cₓ">
-	
-	<label for="Cy">C<sub>y</sub>:</label>
-	<input type="range" id="Cy" min="-150.0" max="150.0" value="-43.907218870556122" step="0.01">
-	<input type="text" id="Cy_text" value="-0.041531240803876872" title="Cy"><br>
-	</fieldset>
-	
-	<label for="B1">B₁:</label>
-	<input type="range" id="B1" min="-80" max="80" value="0.20890931770811011" step="0.01">
-	<input type="text" id="B1_text" value="-0.041531240803876872">
+        <fieldset class="blue-outline">
+            <legend>Principal point [pixels]:</legend>
+            <label for="Cx">Cₓ:</label>
+            <input type="range" id="Cx" min="-150.0" max="150.0" value="25.295157579435635" step="0.01">
+            <input type="text" id="Cx_text" value="-0.041531240803876872" title="Cₓ">
 
-	<label for="B2">B₂:</label>
-	<input type="range" id="B2" min="-80" max="80" value="1.3186242018479155" step="0.01">
-	<input type="text" id="B2_text" value="0.012941302706440718"><br>
-	
-		<label for="P1">P₁:</label>
-	<input type="range" id="P1" min="-0.1" max="0.1" value="-0.00027044595856980146" step="0.0001">
-	<input type="text" id="P1_text" value="-0.041531240803876872">
+            <label for="Cy">C<sub>y</sub>:</label>
+            <input type="range" id="Cy" min="-150.0" max="150.0" value="-43.907218870556122" step="0.01">
+            <input type="text" id="Cy_text" value="-0.041531240803876872" title="Cy"><br>
+        </fieldset>
+        <br>
 
-	<label for="P2">P₂:</label>
-	<input type="range" id="P2" min="-0.1" max="0.1" value="0.00021213432269553002" step="0.0001">
-	<input type="text" id="P2_text" value="0.012941302706440718"><br>
-	
-	<label for="K1">K₁:</label>
-	<input type="range" id="K1" min="-1.0" max="1.0" value="-0.041531240803876872" step="0.001">
-	<input type="text" id="K1_text" value="-0.041531240803876872">
+        <fieldset class="blue-outline">
+            <legend>Affinity and Non‑orthogonality Coefficients [pixels]:</legend>
+            <label for="B1">B₁:</label>
+            <input type="range" id="B1" min="-80" max="80" value="0.20890931770811011" step="0.01">
+            <input type="text" id="B1_text" value="-0.041531240803876872">
 
-	<label for="K2">K₂:</label>
-	<input type="range" id="K2" min="-0.5" max="0.5" value="0.012941302706440718" step="0.001">
-	<input type="text" id="K2_text" value="0.012941302706440718"><br>
+            <label for="B2">B₂:</label>
+            <input type="range" id="B2" min="-80" max="80" value="1.3186242018479155" step="0.01">
+            <input type="text" id="B2_text" value="0.012941302706440718"><br>
+        </fieldset>
+        <br>
 
-	<label for="K3">K₃:</label>
-	<input type="range" id="K3" min="-0.01" max="0.01" value="-0.0034808416825439122" step="0.0001">
-	<input type="text" id="K3_text" value="-0.0034808416825439122">
+        <fieldset class="blue-outline">
+            <legend>Tangential Distortion Coefficients [no dimension]:</legend>
+            <label for="P1">P₁:</label>
+            <input type="range" id="P1" min="-0.1" max="0.1" value="-0.00027044595856980146" step="0.0001">
+            <input type="text" id="P1_text" value="-0.041531240803876872">
 
-	<label for="K4">K₄:</label>
-	<input type="range" id="K4" min="-0.001" max="0.001" value="-8.8755910742031053e-05" step="0.00001">
-	<input type="text" id="K4_text" value="-8.8755910742031053e-05" title="K₄"><br>
+            <label for="P2">P₂:</label>
+            <input type="range" id="P2" min="-0.1" max="0.1" value="0.00021213432269553002" step="0.0001">
+            <input type="text" id="P2_text" value="0.012941302706440718"><br>
+        </fieldset>
+        <br>
 
-	<label for="spacing">Line spacing:</label>
-	<input type="range" id="spacing" min="0.01" max="0.5" value="0.1" step="0.01">
-	<input type="text" id="spacing_text" value="0.1" title="line spacing"><br>
-	
-	<input type="button" value="↻" id="reset" title="reset">
+        <fieldset class="blue-outline">
+            <legend>Radial Distortion Coefficients [no dimension]:</legend>
+            <label for="K1">K₁:</label>
+            <input type="range" id="K1" min="-1.0" max="1.0" value="-0.041531240803876872" step="0.001">
+            <input type="text" id="K1_text" value="-0.041531240803876872">
+
+            <label for="K2">K₂:</label>
+            <input type="range" id="K2" min="-0.5" max="0.5" value="0.012941302706440718" step="0.001">
+            <input type="text" id="K2_text" value="0.012941302706440718"><br>
+
+            <label for="K3">K₃:</label>
+            <input type="range" id="K3" min="-0.01" max="0.01" value="-0.0034808416825439122" step="0.0001">
+            <input type="text" id="K3_text" value="-0.0034808416825439122">
+
+            <label for="K4">K₄:</label>
+            <input type="range" id="K4" min="-0.001" max="0.001" value="-8.8755910742031053e-05" step="0.00001">
+            <input type="text" id="K4_text" value="-8.8755910742031053e-05" title="K₄"><br>
+        </fieldset>
+        <br>
+
+        <fieldset class="blue-outline">
+            <legend>Height, Width and Focal Length [pixels]:</legend>
+            <label for="H">H:</label>
+            <input type="range" id="H" min="640" max="10000" value="5496" step="1">
+            <input type="text" id="H_text" value="5496" title="H">
+
+            <label for="W">W:</label>
+            <input type="range" id="W" min="640" max="10000" value="3672" step="1">
+            <input type="text" id="W_text" value="3672" title="W"><br>
+
+            <label for="F">F:</label>
+            <input type="range" id="F" min="100" max="10000" value="2779.2957348125424" step="0.1">
+            <input type="text" id="F_text" value="2779.2957348125424" title="F">
+        </fieldset>
+        <br>
+
+        <fieldset class="blue-outline">
+            <legend>Visualization settings:</legend>
+            <label for="spacing">Line spacing:</label>
+            <input type="range" id="spacing" min="0.01" max="0.5" value="0.1" step="0.01">
+            <input type="text" id="spacing_text" value="0.1" title="line spacing"><br>
+
+            <input type="button" value="↻" id="reset" title="reset">
+        </fieldset>
     </div>
 
-<script>
-"use strict";
+    <script>
+        "use strict";
 
-const width = 5496.0,
-    height = 3672.0,
-    f = 2779.2957348125424,
-    cx = 25.295157579435635,
-    cy = -43.907218870556122,
-    b1 = 0.20890931770811011,
-    b2 = 1.3186242018479155,
-    p1 = -0.00027044595856980146,
-    p2 = 0.00021213432269553002;
+        const width = 5496.0,
+            height = 3672.0,
+            f = 2779.2957348125424;
 
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-const CxSlider =document.getElementById("Cx"),
-CySlider =document.getElementById("Cy"),
-K1Slider = document.getElementById("K1"),
-    K2Slider = document.getElementById("K2"),
-    K3Slider = document.getElementById("K3"),
-    K4Slider = document.getElementById("K4"),
-	B1Slider = document.getElementById("B1"),
-    B2Slider = document.getElementById("B2"),
-    P1Slider = document.getElementById("P1"),
-    P2Slider = document.getElementById("P2"),
-    SpacingSlider = document.getElementById("spacing"),
-    K1Text = document.getElementById("K1_text"),
-    K2Text = document.getElementById("K2_text");
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        const CxSlider = document.getElementById("Cx"),
+            CySlider = document.getElementById("Cy"),
+            K1Slider = document.getElementById("K1"),
+            K2Slider = document.getElementById("K2"),
+            K3Slider = document.getElementById("K3"),
+            K4Slider = document.getElementById("K4"),
+            B1Slider = document.getElementById("B1"),
+            B2Slider = document.getElementById("B2"),
+            P1Slider = document.getElementById("P1"),
+            P2Slider = document.getElementById("P2"),
+            SpacingSlider = document.getElementById("spacing"),
+            K1Text = document.getElementById("K1_text"),
+            K2Text = document.getElementById("K2_text");
 
-const sliders = [K1Slider, K2Slider, K3Slider, K4Slider, SpacingSlider, CxSlider, CySlider, P1Slider, P2Slider, B1Slider, B2Slider];
+        const sliders = [K1Slider, K2Slider, K3Slider, K4Slider, SpacingSlider, CxSlider, CySlider, P1Slider, P2Slider, B1Slider, B2Slider];
 
-sliders.forEach(slider => {
-    const updateUI = () => {
-        slider.title = slider.value;
-        const textBox = document.getElementById(`${slider.id}_text`);
-        if (textBox) {
-            textBox.value = slider.value;
-        }
-    };
-
-    slider.addEventListener("input", drawLine);
-    slider.addEventListener("input", updateUI);
-
-    // Initial update to ensure correct values on load
-    updateUI();
-});
-						   
-
-document.getElementById("reset").addEventListener("click", () => {
         sliders.forEach(slider => {
-        slider.value = slider.getAttribute("value"); // Reset to default value
-        const textBox = document.getElementById(slider.id + "_text");
-        if (textBox) {
-            textBox.value = slider.value;
+            const updateUI = () => {
+                slider.title = slider.value;
+                const textBox = document.getElementById(`${slider.id}_text`);
+                if (textBox) {
+                    textBox.value = slider.value;
+                }
+            };
+
+            slider.addEventListener("input", drawLine);
+            slider.addEventListener("input", updateUI);
+
+            // Initial update to ensure correct values on load
+            updateUI();
+        });
+
+
+        document.getElementById("reset").addEventListener("click", () => {
+            sliders.forEach(slider => {
+                slider.value = slider.getAttribute("value"); // Reset to default value
+                const textBox = document.getElementById(slider.id + "_text");
+                if (textBox) {
+                    textBox.value = slider.value;
+                }
+                drawLine();
+            });
+        });
+
+
+        function computeUV(X, Y,
+            width, height,
+            f,
+            cx, cy,
+            b1, b2,
+            p1, p2,
+            k1, k2, k3, k4,
+            Z = 1.0,
+            scale = 0.1) {
+
+            const x = X / Z, y = Y / Z;
+            const x2 = x * x, y2 = y * y;
+            const r2 = x2 + y2;
+
+            const K = 1.0 + r2 * (k1 + r2 * (k2 + r2 * (r2 * k4 + k3)));
+
+            const radialX = x * K;
+            const radialY = y * K;
+            const xy = x * y;
+            const tangentialX = p1 * (r2 + 2.0 * x2) + 2.0 * p2 * xy;
+            const tangentialY = p2 * (r2 + 2.0 * y2) + 2.0 * p1 * xy;
+
+            const xDistorted = radialX + tangentialX;
+            const yDistorted = radialY + tangentialY;
+
+            return {
+                u: scale * ((0.5 * width) + cx + xDistorted * f + xDistorted * b1 + yDistorted * b2),
+                v: scale * (yDistorted * f + cy + (0.5 * height))
+            };
         }
-		drawLine();
-    });
-});
 
+        function drawLine() {
+            const cx = parseFloat(CxSlider.value),
+                cy = parseFloat(CySlider.value),
+                k1 = parseFloat(K1Slider.value),
+                k2 = parseFloat(K2Slider.value),
+                k3 = parseFloat(K3Slider.value),
+                k4 = parseFloat(K4Slider.value),
+                p1 = parseFloat(P1Slider.value),
+                p2 = parseFloat(P2Slider.value),
+                b1 = parseFloat(B1Slider.value),
+                b2 = parseFloat(B2Slider.value),
+                spacing = parseFloat(SpacingSlider.value),
+                can_w = canvas.width,
+                can_h = canvas.height,
+                scale = can_w / width;
 
-function computeUV(X, Y,
-    width, height,
-    f,
-    cx, cy,
-    b1, b2,
-    p1, p2,
-    k1, k2, k3, k4,
-    Z = 1.0,
-    scale = 0.1) {
+            ctx.clearRect(0, 0, can_w, can_h);
 
-    const x = X / Z, y = Y / Z;
-    const x2 = x * x, y2 = y * y;
-    const r2 = x2 + y2;
+            K1Text.value = k1;
+            K2Text.value = k2;
 
-    const K = 1.0 + r2 * (k1 + r2 * (k2 + r2 * (r2 * k4 + k3)));
+            { // Horizontal:
+                ctx.beginPath();
+                for (let y = -1.1; y <= 1.1; y += spacing) {
+                    let { u, v } = computeUV(-1.1, y, width, height, f, cx, cy, b1, b2, p1, p2, k1, k2, k3, k4, 1.0, scale);
+                    ctx.moveTo(u, v);
 
-    const radialX = x * K;
-    const radialY = y * K;
-    const xy = x * y;
-    const tangentialX = p1 * (r2 + 2.0 * x2) + 2.0 * p2 * xy;
-    const tangentialY = p2 * (r2 + 2.0 * y2) + 2.0 * p1 * xy;
+                    for (let x = -1.1; x <= 1.1; x += spacing) {
+                        ({ u, v } = computeUV(x, y, width, height, f, cx, cy, b1, b2, p1, p2, k1, k2, k3, k4));
+                        ctx.lineTo(u, v);
+                    }
+                }
+                ctx.strokeStyle = "red";
+                ctx.lineWidth = 2.0;
+                ctx.stroke();
+            }
+            { // Vertical:
+                ctx.beginPath();
+                for (let x = -1.1; x <= 1.1; x += spacing) {
 
-    const xDistorted = radialX + tangentialX;
-    const yDistorted = radialY + tangentialY;
+                    let { u, v } = computeUV(x, -1.1, width, height, f, cx, cy, b1, b2, p1, p2, k1, k2, k3, k4);
+                    ctx.moveTo(u, v);
 
-    return {
-        u: scale * ((0.5 * width) + cx + xDistorted * f + xDistorted * b1 + yDistorted * b2),
-        v: scale * (yDistorted * f + cy + (0.5 * height))
-    };
-}
+                    for (let y = -1.1; y <= 1.1; y += spacing) {
+                        ({ u, v } = computeUV(x, y, width, height, f, cx, cy, b1, b2, p1, p2, k1, k2, k3, k4));
+                        ctx.lineTo(u, v);
+                    }
+                }
+                ctx.strokeStyle = "brown";
+                ctx.lineWidth = 2.0;
+                ctx.stroke();
+            }
+            { // Center mark:
+                ctx.beginPath();
+                const ocx = (.5 * can_w + scale * cx), ocy = (.5 * can_h + scale * cy);
+                ctx.moveTo(ocx - 10, ocy - 10);
+                ctx.lineTo(ocx + 10, ocy + 10);
+                ctx.moveTo(ocx + 10, ocy - 10);
+                ctx.lineTo(ocx - 10, ocy + 10);
+                ctx.strokeStyle = "blue";
+                ctx.lineWidth = 2.0;
+                ctx.stroke();
 
-function drawLine() {
-    const cx = parseFloat(CxSlider.value),
-	cy = parseFloat(CySlider.value),
-	k1 = parseFloat(K1Slider.value),
-        k2 = parseFloat(K2Slider.value),
-        k3 = parseFloat(K3Slider.value),
-        k4 = parseFloat(K4Slider.value),
-			p1 = parseFloat(P1Slider.value),
-        p2 = parseFloat(P2Slider.value),
-        b1 = parseFloat(B1Slider.value),
-        b2 = parseFloat(B2Slider.value),
-        spacing = parseFloat(SpacingSlider.value),
-        can_w = canvas.width,
-        can_h = canvas.height,
-        scale = can_w / width;
-
-    ctx.clearRect(0, 0, can_w, can_h);
-
-    K1Text.value = k1;
-    K2Text.value = k2;
-
-    { // Horizontal:
-        ctx.beginPath();
-        for (let y = -1.1; y <= 1.1; y += spacing) {
-            let { u, v } = computeUV(-1.1, y, width, height, f, cx, cy, b1, b2, p1, p2, k1, k2, k3, k4, 1.0, scale);
-            ctx.moveTo(u, v);
-
-            for (let x = -1.1; x <= 1.1; x += spacing) {
-                ({ u, v } = computeUV(x, y, width, height, f, cx, cy, b1, b2, p1, p2, k1, k2, k3, k4));
-                ctx.lineTo(u, v);
+                ctx.beginPath();
+                const rcx = (.5 * can_w), rcy = (.5 * can_h);
+                ctx.moveTo(rcx - 10, rcy - 10);
+                ctx.lineTo(rcx + 10, rcy + 10);
+                ctx.moveTo(rcx + 10, rcy - 10);
+                ctx.lineTo(rcx - 10, rcy + 10);
+                ctx.strokeStyle = "green";
+                ctx.lineWidth = 2.0;
+                ctx.stroke();
             }
         }
-        ctx.strokeStyle = "red";
-        ctx.lineWidth = 2.0;
-        ctx.stroke();
-    }
-    { // Vertical:
-        ctx.beginPath();
-        for (let x = -1.1; x <= 1.1; x += spacing) {
 
-            let { u, v } = computeUV(x, -1.1, width, height, f, cx, cy, b1, b2, p1, p2, k1, k2, k3, k4);
-            ctx.moveTo(u, v);
-
-            for (let y = -1.1; y <= 1.1; y += spacing) {
-                ({ u, v } = computeUV(x, y, width, height, f, cx, cy, b1, b2, p1, p2, k1, k2, k3, k4));
-                ctx.lineTo(u, v);
-            }
-        }
-        ctx.strokeStyle = "brown";
-        ctx.lineWidth = 2.0;
-        ctx.stroke();
-    }
-	    { // Center mark:
-        ctx.beginPath();
-        const ocx = (.5*can_w + scale*cx), ocy = (.5*can_h + scale*cy);
-        ctx.moveTo(ocx-10, ocy-10);
-		ctx.lineTo(ocx+10, ocy+10);
-		        ctx.moveTo(ocx+10, ocy-10);
-		ctx.lineTo(ocx-10, ocy+10);
-		        ctx.strokeStyle = "blue";
-        ctx.lineWidth = 2.0;
-        ctx.stroke();
-		
-		        ctx.beginPath();
-        const rcx = (.5*can_w), rcy = (.5*can_h );
-        ctx.moveTo(rcx-10, rcy-10);
-		ctx.lineTo(rcx+10, rcy+10);
-		        ctx.moveTo(rcx+10, rcy-10);
-		ctx.lineTo(rcx-10, rcy+10);
-		        ctx.strokeStyle = "green";
-        ctx.lineWidth = 2.0;
-        ctx.stroke();
-    }
-}
-
-drawLine();
-</script>
+        drawLine();
+    </script>
 </body>
 </html>
