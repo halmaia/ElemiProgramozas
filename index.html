@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Optical distortion visualizer</title>
     <style>
+        h5 {
+            color: gray;
+        }
+
         body {
             text-align: center;
             margin: 20px;
@@ -41,7 +45,8 @@
 </head>
 <body>
     <h2>Optical distortion visualizer</h2>
-    <h5 style="color: gray">by Ákos Halmai</h5>
+    <h5>by Ákos Halmai, University of Pécs – Institute of Geography and Earth Sciences</h5>
+    <h5>Under construction</h5>
     <canvas id="canvas" width="547" height="367"></canvas>
 
     <div class="controls">
@@ -51,7 +56,7 @@
             <input type="range" id="Cx" min="-150.0" max="150.0" value="25.295157579435635" step="0.01">
             <input type="text" id="Cx_text" value="-0.041531240803876872" title="Cₓ">
 
-            <label for="Cy">C<sub>y</sub>:</label>
+            <label for="Cy">Cᵧ:</label>
             <input type="range" id="Cy" min="-150.0" max="150.0" value="-43.907218870556122" step="0.01">
             <input type="text" id="Cy_text" value="-0.041531240803876872" title="Cy"><br>
         </fieldset>
@@ -103,13 +108,13 @@
 
         <fieldset class="blue-outline">
             <legend>Height, Width and Focal Length [pixels]:</legend>
-            <label for="H">H:</label>
-            <input type="range" id="H" min="640" max="10000" value="5496" step="1">
-            <input type="text" id="H_text" value="5496" title="H">
+            <label for="H">W:</label>
+            <input type="range" id="W" min="640" max="10000" value="5496" step="1">
+            <input type="text" id="W_text" value="5496" title="W">
 
-            <label for="W">W:</label>
-            <input type="range" id="W" min="640" max="10000" value="3672" step="1">
-            <input type="text" id="W_text" value="3672" title="W"><br>
+            <label for="W">H:</label>
+            <input type="range" id="H" min="640" max="10000" value="3672" step="1">
+            <input type="text" id="H_text" value="3672" title="H"><br>
 
             <label for="F">F:</label>
             <input type="range" id="F" min="100" max="10000" value="2779.2957348125424" step="0.1">
@@ -127,12 +132,24 @@
         </fieldset>
     </div>
 
+    <div class="meta">
+        <h5>The formulas behind the calculation:</h5>
+        <pre>
+x = X / Z
+y = Y / Z
+r = sqrt(x² + y²)
+K = 1 + K₁∙r² + K₂∙r⁴ + K₃∙r⁶ + K₄∙r⁸
+x′ = x∙K + (P1∙(r²+2∙x²) + 2∙P₂∙x∙y)
+y′ = y∙K + (P₂∙(r²+2∙y²) + 2∙P₁∙x∙y)
+u = w / 2 + cₓ + x′∙f + x′∙B₁ + y′∙B₂
+v = h / 2 + cᵧ + y′∙f
+
+Original source: Agisoft Metashape User Manual – Professional Edition, Version 2.2
+(https://www.agisoft.com/pdf/metashape-pro_2_2_en.pdf)
+        </pre>
+    </div>
     <script>
         "use strict";
-
-        const width = 5496.0,
-            height = 3672.0,
-            f = 2779.2957348125424;
 
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext("2d");
@@ -146,11 +163,19 @@
             B2Slider = document.getElementById("B2"),
             P1Slider = document.getElementById("P1"),
             P2Slider = document.getElementById("P2"),
+            FSlider = document.getElementById("F"),
+            HSlider = document.getElementById("H"),
+            WSlider = document.getElementById("W"),
             SpacingSlider = document.getElementById("spacing"),
             K1Text = document.getElementById("K1_text"),
             K2Text = document.getElementById("K2_text");
 
-        const sliders = [K1Slider, K2Slider, K3Slider, K4Slider, SpacingSlider, CxSlider, CySlider, P1Slider, P2Slider, B1Slider, B2Slider];
+        const sliders = [K1Slider, K2Slider, K3Slider, K4Slider,
+            SpacingSlider, CxSlider, CySlider,
+            P1Slider, P2Slider,
+            B1Slider, B2Slider,
+            HSlider, WSlider,
+            FSlider];
 
         sliders.forEach(slider => {
             const updateUI = () => {
@@ -167,7 +192,6 @@
             // Initial update to ensure correct values on load
             updateUI();
         });
-
 
         document.getElementById("reset").addEventListener("click", () => {
             sliders.forEach(slider => {
@@ -223,22 +247,26 @@
                 p2 = parseFloat(P2Slider.value),
                 b1 = parseFloat(B1Slider.value),
                 b2 = parseFloat(B2Slider.value),
-                spacing = parseFloat(SpacingSlider.value),
-                can_w = canvas.width,
-                can_h = canvas.height,
-                scale = can_w / width;
+                f = parseFloat(FSlider.value),
+                height = parseFloat(HSlider.value),
+                width = parseFloat(WSlider.value),
+                spacing = parseFloat(SpacingSlider.value);
+
+            const scale = 0.1,
+                can_w = scale * width,
+                can_h = scale * height;
+            canvas.width = can_w;
+            canvas.height = can_h;
+
 
             ctx.clearRect(0, 0, can_w, can_h);
-
-            K1Text.value = k1;
-            K2Text.value = k2;
 
             { // Horizontal:
                 ctx.beginPath();
                 for (let y = -1.1; y <= 1.1; y += spacing) {
                     let { u, v } = computeUV(-1.1, y, width, height, f, cx, cy, b1, b2, p1, p2, k1, k2, k3, k4, 1.0, scale);
                     ctx.moveTo(u, v);
-
+                    
                     for (let x = -1.1; x <= 1.1; x += spacing) {
                         ({ u, v } = computeUV(x, y, width, height, f, cx, cy, b1, b2, p1, p2, k1, k2, k3, k4));
                         ctx.lineTo(u, v);
@@ -266,7 +294,7 @@
             }
             { // Center mark:
                 ctx.beginPath();
-                const ocx = (.5 * can_w + scale * cx), ocy = (.5 * can_h + scale * cy);
+                const ocx = (0.5 * can_w + scale * cx), ocy = (.5 * can_h + scale * cy);
                 ctx.moveTo(ocx - 10, ocy - 10);
                 ctx.lineTo(ocx + 10, ocy + 10);
                 ctx.moveTo(ocx + 10, ocy - 10);
@@ -276,7 +304,7 @@
                 ctx.stroke();
 
                 ctx.beginPath();
-                const rcx = (.5 * can_w), rcy = (.5 * can_h);
+                const rcx = (0.5 * can_w), rcy = (.5 * can_h);
                 ctx.moveTo(rcx - 10, rcy - 10);
                 ctx.lineTo(rcx + 10, rcy + 10);
                 ctx.moveTo(rcx + 10, rcy - 10);
